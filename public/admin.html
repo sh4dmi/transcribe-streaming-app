@@ -13,6 +13,7 @@
         <h1>Conference Transcriber - Admin Control</h1>
         <div class="view-toggle">
           <a href="./index.html" target="_blank" class="button">Open Audience View</a>
+          <a href="./conference.html" target="_blank" class="button">Open Conference Details</a>
         </div>
       </header>
 
@@ -56,6 +57,53 @@
                 <button type="button" id="cancelSpeakerBtn" class="secondary-button">Cancel</button>
               </div>
             </form>
+          </div>
+          
+          <!-- Conference Details Customization -->
+          <div class="conference-details-panel">
+            <h3>Conference Details</h3>
+            <div class="form-group">
+              <label for="conferenceName">Conference Name:</label>
+              <input type="text" id="adminConferenceName" placeholder="Enter conference name">
+            </div>
+            
+            <div class="form-group">
+              <label for="conferenceDate">Conference Date:</label>
+              <input type="text" id="adminConferenceDate" placeholder="e.g., 21-22 בדצמבר, 2024">
+            </div>
+            
+            <div class="form-group">
+              <label for="conferenceLocation">Location:</label>
+              <input type="text" id="adminConferenceLocation" placeholder="Enter venue name">
+            </div>
+            
+            <div class="form-group">
+              <label for="conferenceAttendees">Expected Attendees:</label>
+              <input type="text" id="adminConferenceAttendees" placeholder="e.g., כ-800 משתתפים">
+            </div>
+            
+            <div class="form-group">
+              <label for="conferenceAbout">About Conference:</label>
+              <textarea id="adminConferenceAbout" rows="4" placeholder="Enter conference description"></textarea>
+            </div>
+            
+            <div class="form-group">
+              <label for="conferenceVenue">Venue Details:</label>
+              <textarea id="adminConferenceVenue" rows="4" placeholder="Enter venue details and directions"></textarea>
+            </div>
+            
+            <div class="form-actions">
+              <button type="button" id="saveConferenceDetailsBtn" class="primary-button">Save Conference Details</button>
+            </div>
+          </div>
+          
+          <!-- Questions from audience -->
+          <div class="questions-panel">
+            <h3>Questions from Audience</h3>
+            <div id="questionsList" class="questions-list">
+              <!-- Questions will be added here dynamically -->
+              <div class="no-questions-message">No questions yet.</div>
+            </div>
           </div>
         </div>
         
@@ -122,6 +170,20 @@
           <div class="preview-section">
             <h3>Live Preview</h3>
             <div id="adminTranscribedText" class="transcript-preview"></div>
+          </div>
+          
+          <!-- Question Answer Section -->
+          <div id="questionAnswerContainer" class="control-section" style="display: none;">
+            <h3>Answer Question</h3>
+            <div id="currentQuestion" class="current-question"></div>
+            <div class="form-group">
+              <label for="questionAnswer">Your Answer:</label>
+              <textarea id="questionAnswer" rows="3"></textarea>
+            </div>
+            <div class="form-actions">
+              <button id="submitAnswerBtn" class="primary-button">Submit Answer</button>
+              <button id="skipQuestionBtn" class="secondary-button">Skip Question</button>
+            </div>
           </div>
         </div>
       </div>

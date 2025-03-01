@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <title>פרטי הכנס - תמלול כנסים</title>
+    <link rel="stylesheet" type="text/css" href="./style.css" />
+    <script type="text/javascript" src="./conference.bundle.js" defer></script>
+  </head>
+
+  <body>
+    <div id="conferenceContainer" class="rtl-content">
+      <header class="audience-header">
+        <div class="header-content">
+          <h1>תמלול כנסים</h1>
+          <div id="connectionStatus" class="connection-status"></div>
+        </div>
+        <div class="conference-metadata">
+          <h2 id="conferenceName"></h2>
+          <span id="conferenceDate"></span>
+        </div>
+        <nav class="site-navigation">
+          <ul>
+            <li><a href="./index.html">תמלול חי</a></li>
+            <li><a href="./conference.html" class="active">פרטי הכנס</a></li>
+          </ul>
+        </nav>
+      </header>
+
+      <div class="audience-content">
+        <div class="conference-details-section">
+          <h2 class="section-title">אודות הכנס</h2>
+          <div class="conference-about">
+            <div id="conferenceAbout" class="conference-description">
+              <!-- Conference description will be loaded here -->
+            </div>
+            <div class="conference-meta-info">
+              <div class="meta-item">
+                <span class="meta-label">תאריך:</span>
+                <span id="metaDate" class="meta-value"></span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">מיקום:</span>
+                <span id="metaLocation" class="meta-value"></span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">משתתפים:</span>
+                <span id="metaAttendees" class="meta-value"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="conference-schedule-section">
+          <h2 class="section-title">לוח זמנים</h2>
+          <div class="schedule-controls">
+            <div id="scheduleDate" class="schedule-date"></div>
+            <div class="schedule-filters">
+              <button class="filter-button active" data-filter="all">הכל</button>
+              <button class="filter-button" data-filter="presentation">הרצאות</button>
+              <button class="filter-button" data-filter="break">הפסקות</button>
+              <button class="filter-button" data-filter="panel">פאנלים</button>
+            </div>
+          </div>
+          <div id="scheduleList" class="schedule-list">
+            <!-- Schedule items will be loaded here -->
+          </div>
+        </div>
+
+        <div class="speakers-list-section">
+          <h2 class="section-title">דוברי הכנס</h2>
+          <div id="speakersList" class="conference-speakers-grid">
+            <!-- Speakers will be loaded here -->
+          </div>
+        </div>
+
+        <div class="conference-location-section">
+          <h2 class="section-title">מיקום הכנס</h2>
+          <div class="location-info">
+            <div id="venueDetails" class="venue-details">
+              <!-- Venue details will be loaded here -->
+            </div>
+            <div class="venue-map">
+              <img id="venueMap" src="./placeholder-map.png" alt="מפת האולם" class="map-image">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer class="audience-footer">
+        <div class="accessibility-controls">
+          <button id="contrastMode" class="footer-button">מצב ניגודיות גבוהה</button>
+          <button id="fontSizeIncrease" class="footer-button">הגדל טקסט</button>
+        </div>
+        <div class="powered-by">
+          מופעל על ידי AWS Transcribe ו-Google Gemini
+        </div>
+      </footer>
+    </div>
+  </body>
+</html> 

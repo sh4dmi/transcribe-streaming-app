@@ -13,6 +13,7 @@ export default {
   entry: {
     index: "./src/index.js",
     admin: "./src/admin.js",
+    conference: "./src/conference.js",
   },
   output: {
     path: path.resolve(__dirname, "public"),
@@ -24,7 +25,7 @@ export default {
     },
     hot: true,
     open: true,
-    port: 8083,
+    port: 8085,
     historyApiFallback: true,
   },
   plugins: [

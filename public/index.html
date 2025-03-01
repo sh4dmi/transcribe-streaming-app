@@ -10,62 +10,117 @@ index.html is the front-end HTML code for a tutorial demonstrating how to stream
 
 <!-- snippet-start:[transcribe.HTML.streaming.indexv3] -->
 <!doctype html>
-<html>
+<html lang="he" dir="rtl">
   <head>
     <meta charset="UTF-8" />
-    <title>Conference Transcriber - Audience View</title>
+    <title>תמלול כנסים - תצוגת קהל</title>
     <link rel="stylesheet" type="text/css" href="./style.css" />
     <script type="text/javascript" src="./index.bundle.js" defer></script>
   </head>
 
   <body>
-    <div id="audienceContainer">
+    <div id="audienceContainer" class="rtl-content">
       <header class="audience-header">
-        <h1>Conference Transcriber</h1>
-        <div id="connectionStatus" class="connection-status">Connecting...</div>
+        <div class="header-content">
+          <h1>תמלול כנסים</h1>
+          <div id="connectionStatus" class="connection-status">מתחבר...</div>
+        </div>
+        <div class="conference-metadata">
+          <h2 id="conferenceName"></h2>
+          <span id="conferenceDate"></span>
+        </div>
+        <nav class="site-navigation">
+          <ul>
+            <li><a href="./index.html" class="active">תמלול חי</a></li>
+            <li><a href="./conference.html">פרטי הכנס</a></li>
+          </ul>
+        </nav>
       </header>
 
       <div class="audience-content">
         <div class="current-speaker-section">
           <div id="currentSpeakerInfo" class="speaker-info">
             <div class="speaker-image">
-              <img id="speakerImage" src="./placeholder-speaker.png" alt="Current Speaker">
+              <img id="speakerImage" src="./placeholder-speaker.png" alt="דובר נוכחי">
             </div>
             <div class="speaker-details">
-              <h2 id="speakerName">Waiting for session to start...</h2>
+              <h2 id="speakerName">ממתין לתחילת הכנס...</h2>
               <p id="speakerRole"></p>
               <p id="speakerBio" class="speaker-bio"></p>
             </div>
           </div>
         </div>
 
-        <div class="transcript-section">
-          <div class="section-header">
-            <h2>Live Transcript</h2>
-            <div class="language-indicator">
-              <span id="currentLanguage"></span>
+        <div class="main-content-wrapper">
+          <div class="transcript-section">
+            <div class="section-header">
+              <h2>תמלול חי</h2>
+              <div class="controls-row">
+                <div class="language-indicator">
+                  <span id="currentLanguage"></span>
+                </div>
+                <div class="transcript-actions">
+                  <button id="scrollToLatest" class="action-button">קפוץ לקטע האחרון</button>
+                  <div class="search-container">
+                    <input type="text" id="transcriptSearch" placeholder="חיפוש בתמלול..." />
+                    <button id="searchButton" class="action-button">חפש</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="transcription-wrapper">
+              <div id="transcribedText" class="transcription-content"></div>
+              <div id="liveIndicator" class="live-indicator">מתמלל כעת...</div>
             </div>
           </div>
-          <div id="transcribedText" class="transcription-content"></div>
+
+          <div id="summarySection" class="summary-section">
+            <div class="section-header">
+              <h2>סיכום תמציתי</h2>
+              <div class="summary-actions">
+                <!-- Buttons removed as requested -->
+              </div>
+            </div>
+            <div class="summary-wrapper">
+              <div id="summaryText" class="summary-content"></div>
+              <div class="last-updated">
+                <span id="summaryTimestamp">טרם זמין</span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div id="summarySection" class="summary-section">
+        <div class="qa-section">
           <div class="section-header">
-            <h2>Summary</h2>
-            <div class="last-updated">
-              <span id="summaryTimestamp">Not yet available</span>
-            </div>
+            <h2>שאלות ותשובות</h2>
           </div>
-          <div id="summaryText" class="summary-content"></div>
+          <div class="qa-form">
+            <div class="form-group">
+              <label for="questionInput">שאלה לדובר:</label>
+              <textarea id="questionInput" placeholder="הקלד את שאלתך כאן..."></textarea>
+            </div>
+            <button id="submitQuestionBtn" class="primary-button">שלח שאלה</button>
+          </div>
+          <div id="questionsContainer" class="questions-list">
+            <!-- Questions will appear here when answered -->
+          </div>
+        </div>
+
+        <div class="speakers-gallery-section">
+          <h2>דוברים בכנס</h2>
+          <div id="speakersGallery" class="speakers-gallery">
+            <!-- Speakers will be added here dynamically -->
+          </div>
         </div>
       </div>
 
       <footer class="audience-footer">
-        <div class="conference-info">
-          <span id="conferenceName"></span>
+        <div class="accessibility-controls">
+          <button id="contrastMode" class="footer-button">מצב ניגודיות גבוהה</button>
+          <button id="fontSizeIncrease" class="footer-button">הגדל טקסט</button>
         </div>
         <div class="powered-by">
-          Powered by AWS Transcribe & Google Gemini
+          מופעל על ידי AWS Transcribe ו-Google Gemini
         </div>
       </footer>
     </div>

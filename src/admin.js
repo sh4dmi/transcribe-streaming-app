@@ -27,6 +27,15 @@ let speakerFormContainer = null;
 let speakerForm = null;
 let cancelSpeakerBtn = null;
 
+// Conference details elements
+let adminConferenceName = null;
+let adminConferenceDate = null;
+let adminConferenceLocation = null;
+let adminConferenceAttendees = null;
+let adminConferenceAbout = null;
+let adminConferenceVenue = null;
+let saveConferenceDetailsBtn = null;
+
 // Global settings
 let isRecording = false;
 let isEditingSpeaker = false;
@@ -35,6 +44,14 @@ let summarizationTimer = null;
 
 // Speakers data
 let speakers = [];
+
+// DOM elements - add new Q&A elements
+let questionsList = null;
+let questionAnswerContainer = null;
+let currentQuestion = null;
+let questionAnswer = null;
+let submitAnswerBtn = null;
+let skipQuestionBtn = null;
 
 // Initialize DOM elements
 function initializeDOM() {
@@ -55,6 +72,23 @@ function initializeDOM() {
   speakerFormContainer = document.getElementById("speakerFormContainer");
   speakerForm = document.getElementById("speakerForm");
   cancelSpeakerBtn = document.getElementById("cancelSpeakerBtn");
+  
+  // Conference details elements
+  adminConferenceName = document.getElementById("adminConferenceName");
+  adminConferenceDate = document.getElementById("adminConferenceDate");
+  adminConferenceLocation = document.getElementById("adminConferenceLocation");
+  adminConferenceAttendees = document.getElementById("adminConferenceAttendees");
+  adminConferenceAbout = document.getElementById("adminConferenceAbout");
+  adminConferenceVenue = document.getElementById("adminConferenceVenue");
+  saveConferenceDetailsBtn = document.getElementById("saveConferenceDetailsBtn");
+  
+  // Q&A elements
+  questionsList = document.getElementById("questionsList");
+  questionAnswerContainer = document.getElementById("questionAnswerContainer");
+  currentQuestion = document.getElementById("currentQuestion");
+  questionAnswer = document.getElementById("questionAnswer");
+  submitAnswerBtn = document.getElementById("submitAnswerBtn");
+  skipQuestionBtn = document.getElementById("skipQuestionBtn");
   
   // Check if all required elements were found
   if (!adminRecord || !adminLanguageList || !adminTranscribedText) {
@@ -77,20 +111,39 @@ function initializeEventListeners() {
   cancelSpeakerBtn.addEventListener("click", hideSpeakerForm);
   speakerForm.addEventListener("submit", saveSpeaker);
   
-  // Gemini settings
-  adminSaveApiKey.addEventListener("click", saveGeminiApiKey);
-  adminAutoSummarize.addEventListener("change", toggleAutoSummarize);
+  // Conference details
+  if (saveConferenceDetailsBtn) {
+    saveConferenceDetailsBtn.addEventListener("click", saveConferenceDetails);
+  }
   
-  // Language settings
+  // Language selection
   adminLanguageList.addEventListener("change", onLanguageChange);
   
-  // Active speaker selection
+  // Active speaker
   activeSpeaker.addEventListener("change", onActiveSpeakerChange);
+  
+  // Gemini API key
+  adminSaveApiKey.addEventListener("click", saveGeminiApiKey);
+  
+  // Auto-summarization
+  adminAutoSummarize.addEventListener("change", toggleAutoSummarize);
+  
+  // Q&A event listeners
+  if (submitAnswerBtn) {
+    submitAnswerBtn.addEventListener("click", submitAnswer);
+  }
+  
+  if (skipQuestionBtn) {
+    skipQuestionBtn.addEventListener("click", skipQuestion);
+  }
+  
+  // Poll for new questions
+  setInterval(checkForNewQuestions, 3000);
 }
 
 // Load saved data
 function loadSavedData() {
-  // Load speakers from localStorage
+  // Load saved speakers
   const savedSpeakers = localStorage.getItem("conferenceSpeakers");
   if (savedSpeakers) {
     speakers = JSON.parse(savedSpeakers);
@@ -98,30 +151,67 @@ function loadSavedData() {
     updateActiveSpeakerDropdown();
   }
   
+  // Load saved language
+  const savedLanguage = localStorage.getItem("currentLanguage");
+  if (savedLanguage && adminLanguageList) {
+    adminLanguageList.value = savedLanguage;
+  }
+  
   // Load Gemini API key
   const savedApiKey = localStorage.getItem("geminiApiKey");
-  if (savedApiKey) {
+  if (savedApiKey && adminGeminiApiKey) {
     adminGeminiApiKey.value = savedApiKey;
     geminiClient.setGeminiApiKey(savedApiKey);
   }
   
-  // Load auto-summarize settings
+  // Load auto-summarize setting
   const autoSummarize = localStorage.getItem("autoSummarize") === "true";
-  adminAutoSummarize.checked = autoSummarize;
-  
-  const interval = localStorage.getItem("summarizeInterval");
-  if (interval) {
-    autoSummarizeInterval.value = interval;
+  if (adminAutoSummarize) {
+    adminAutoSummarize.checked = autoSummarize;
   }
   
-  // Load language setting
-  const savedLanguage = localStorage.getItem("transcribeLanguage");
-  if (savedLanguage) {
-    adminLanguageList.value = savedLanguage;
+  // Load saved interval
+  const savedInterval = localStorage.getItem("summarizeInterval");
+  if (savedInterval && autoSummarizeInterval) {
+    autoSummarizeInterval.value = savedInterval;
+  }
+  
+  // Load saved conference details
+  const savedConferenceName = localStorage.getItem("conferenceName");
+  if (savedConferenceName && adminConferenceName) {
+    adminConferenceName.value = savedConferenceName;
+  }
+  
+  const savedConferenceDate = localStorage.getItem("conferenceDate");
+  if (savedConferenceDate && adminConferenceDate) {
+    adminConferenceDate.value = savedConferenceDate;
+  }
+  
+  const savedConferenceLocation = localStorage.getItem("conferenceLocation");
+  if (savedConferenceLocation && adminConferenceLocation) {
+    adminConferenceLocation.value = savedConferenceLocation;
+  }
+  
+  const savedConferenceAttendees = localStorage.getItem("conferenceAttendees");
+  if (savedConferenceAttendees && adminConferenceAttendees) {
+    adminConferenceAttendees.value = savedConferenceAttendees;
+  }
+  
+  const savedConferenceAbout = localStorage.getItem("conferenceAbout");
+  if (savedConferenceAbout && adminConferenceAbout) {
+    adminConferenceAbout.value = savedConferenceAbout;
+  }
+  
+  const savedConferenceVenue = localStorage.getItem("conferenceVenue");
+  if (savedConferenceVenue && adminConferenceVenue) {
+    adminConferenceVenue.value = savedConferenceVenue;
   }
   
   // Load vocabularies
   loadCustomVocabularies();
+  
+  // Check for questions
+  checkForNewQuestions();
 }
 
 // Handle recording toggle
@@ -524,6 +614,183 @@ function onActiveSpeakerChange() {
   }
 }
 
+// Check for new audience questions
+function checkForNewQuestions() {
+  // Get questions from localStorage
+  const questions = JSON.parse(localStorage.getItem('conferenceQuestions') || '[]');
+  
+  // Only update if there are questions
+  if (questions.length > 0) {
+    renderQuestionsList(questions);
+  } else {
+    if (questionsList) {
+      questionsList.innerHTML = '<div class="no-questions-message">No questions yet.</div>';
+    }
+  }
+}
+
+// Render the questions list
+function renderQuestionsList(questions) {
+  if (!questionsList) return;
+  
+  // Clear previous list
+  questionsList.innerHTML = '';
+  
+  // Sort: unanswered first, then by timestamp (newest first)
+  const sortedQuestions = [...questions].sort((a, b) => {
+    if (a.answered !== b.answered) {
+      return a.answered ? 1 : -1; // Unanswered first
+    }
+    return new Date(b.timestamp) - new Date(a.timestamp); // Newest first
+  });
+  
+  if (sortedQuestions.length === 0) {
+    questionsList.innerHTML = '<div class="no-questions-message">No questions yet.</div>';
+    return;
+  }
+  
+  // Create question items
+  sortedQuestions.forEach(question => {
+    const questionItem = document.createElement('div');
+    questionItem.className = `question-item ${question.answered ? 'answered' : 'pending'}`;
+    questionItem.setAttribute('data-id', question.id);
+    
+    const date = new Date(question.timestamp);
+    const timeString = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    
+    // Get speaker name if available
+    let speakerName = "Not specified";
+    if (question.speakerId) {
+      const speakers = JSON.parse(localStorage.getItem('conferenceSpeakers') || '[]');
+      const speaker = speakers.find(s => s.id === question.speakerId);
+      if (speaker) {
+        speakerName = speaker.name;
+      }
+    }
+    
+    questionItem.innerHTML = `
+      <div class="question-metadata">
+        <span class="question-time">${timeString}</span>
+        <span class="question-status ${question.answered ? 'status-answered' : 'status-pending'}">
+          ${question.answered ? 'Answered' : 'Pending'}
+        </span>
+      </div>
+      <div class="question-text">${question.text}</div>
+      <div class="question-speaker">To: ${speakerName}</div>
+      ${question.answer ? `<div class="question-answer">${question.answer}</div>` : ''}
+      ${!question.answered ? `<button class="answer-button action-button">Answer</button>` : ''}
+    `;
+    
+    // Add event listener to answer button
+    const answerButton = questionItem.querySelector('.answer-button');
+    if (answerButton) {
+      answerButton.addEventListener('click', () => {
+        showAnswerForm(question);
+      });
+    }
+    
+    questionsList.appendChild(questionItem);
+  });
+}
+
+// Show the form to answer a specific question
+function showAnswerForm(question) {
+  if (!questionAnswerContainer || !currentQuestion || !questionAnswer) return;
+  
+  // Display the container
+  questionAnswerContainer.style.display = 'block';
+  
+  // Show question details
+  const date = new Date(question.timestamp);
+  const timeString = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+  
+  currentQuestion.innerHTML = `
+    <div class="question-time">${timeString}</div>
+    <div class="question-text-large">${question.text}</div>
+  `;
+  
+  // Store the question ID for later
+  questionAnswerContainer.setAttribute('data-question-id', question.id);
+  
+  // Clear previous answer
+  questionAnswer.value = '';
+  
+  // Scroll to the form
+  questionAnswerContainer.scrollIntoView({ behavior: 'smooth' });
+}
+
+// Submit an answer to a question
+function submitAnswer() {
+  if (!questionAnswerContainer || !questionAnswer) return;
+  
+  const questionId = questionAnswerContainer.getAttribute('data-question-id');
+  const answer = questionAnswer.value.trim();
+  
+  if (!questionId || !answer) {
+    alert('Please provide an answer');
+    return;
+  }
+  
+  // Get current questions
+  const questions = JSON.parse(localStorage.getItem('conferenceQuestions') || '[]');
+  
+  // Find and update the specific question
+  const updatedQuestions = questions.map(q => {
+    if (q.id === questionId) {
+      return {
+        ...q,
+        answer: answer,
+        answered: true,
+        answeredAt: new Date().toISOString()
+      };
+    }
+    return q;
+  });
+  
+  // Save back to localStorage
+  localStorage.setItem('conferenceQuestions', JSON.stringify(updatedQuestions));
+  
+  // Hide the form
+  questionAnswerContainer.style.display = 'none';
+  
+  // Refresh questions list
+  checkForNewQuestions();
+}
+
+// Skip a question (mark as answered without providing an answer)
+function skipQuestion() {
+  if (!questionAnswerContainer) return;
+  
+  const questionId = questionAnswerContainer.getAttribute('data-question-id');
+  
+  if (!questionId) return;
+  
+  // Get current questions
+  const questions = JSON.parse(localStorage.getItem('conferenceQuestions') || '[]');
+  
+  // Find and update the specific question
+  const updatedQuestions = questions.map(q => {
+    if (q.id === questionId) {
+      return {
+        ...q,
+        answer: "Question skipped by moderator",
+        answered: true,
+        answeredAt: new Date().toISOString()
+      };
+    }
+    return q;
+  });
+  
+  // Save back to localStorage
+  localStorage.setItem('conferenceQuestions', JSON.stringify(updatedQuestions));
+  
+  // Hide the form
+  questionAnswerContainer.style.display = 'none';
+  
+  // Refresh questions list
+  checkForNewQuestions();
+}
+
 // App initialization
 function initializeApp() {
   if (!initializeDOM()) {
@@ -543,4 +810,32 @@ function initializeApp() {
 }
 
 // Initialize when DOM is loaded
-document.addEventListener('DOMContentLoaded', initializeApp); 
+document.addEventListener('DOMContentLoaded', initializeApp);
+
+// Save conference details
+function saveConferenceDetails() {
+  // Get values from form
+  const name = adminConferenceName.value.trim();
+  const date = adminConferenceDate.value.trim();
+  const location = adminConferenceLocation.value.trim();
+  const attendees = adminConferenceAttendees.value.trim();
+  const about = adminConferenceAbout.value.trim();
+  const venue = adminConferenceVenue.value.trim();
+  
+  // Validate name (only required field)
+  if (!name) {
+    alert("שם הכנס הוא שדה חובה");
+    return;
+  }
+  
+  // Store values in localStorage
+  localStorage.setItem("conferenceName", name);
+  localStorage.setItem("conferenceDate", date);
+  localStorage.setItem("conferenceLocation", location);
+  localStorage.setItem("conferenceAttendees", attendees);
+  localStorage.setItem("conferenceAbout", about);
+  localStorage.setItem("conferenceVenue", venue);
+  
+  // Show confirmation
+  alert("פרטי הכנס נשמרו בהצלחה");
+} 
