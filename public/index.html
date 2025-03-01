@@ -13,78 +13,61 @@ index.html is the front-end HTML code for a tutorial demonstrating how to stream
 <html>
   <head>
     <meta charset="UTF-8" />
-    <title>Streaming Speech to Text</title>
+    <title>Conference Transcriber - Audience View</title>
     <link rel="stylesheet" type="text/css" href="./style.css" />
     <script type="text/javascript" src="./index.bundle.js" defer></script>
-    <script>
-      // Fallback in case window.clearTranscription is not available when button is clicked
-      function safeClearTranscription() {
-        if (window.clearTranscription) {
-          window.clearTranscription();
-        } else {
-          const transcribedText = document.getElementById("transcribedText");
-          if (transcribedText) {
-            transcribedText.innerHTML = "";
-          }
-        }
-      }
-    </script>
   </head>
 
   <body>
-    <div id="mainContainer">
-      <h1>Streaming Speech to Text</h1>
-      <select id="inputLanguageList">
-        <option value="nan">Select the language you are going to speak</option>
-        <option value="he-IL">Hebrew</option>
-      </select>
+    <div id="audienceContainer">
+      <header class="audience-header">
+        <h1>Conference Transcriber</h1>
+        <div id="connectionStatus" class="connection-status">Connecting...</div>
+      </header>
 
-      <div class="vocab-section">
-        <h3>Custom Vocabulary</h3>
-        <select id="vocabList">
-          <option value="">No custom vocabulary</option>
-          <!-- Options will be populated by JavaScript -->
-        </select>
-      </div>
-
-      <div class="gemini-section">
-        <h3>Gemini AI Summarization</h3>
-        <div class="api-key-input">
-          <input 
-            type="password" 
-            id="geminiApiKey" 
-            placeholder="Enter Gemini API Key" 
-            autocomplete="off"
-          />
-          <button id="saveApiKey" class="button">Save Key</button>
+      <div class="audience-content">
+        <div class="current-speaker-section">
+          <div id="currentSpeakerInfo" class="speaker-info">
+            <div class="speaker-image">
+              <img id="speakerImage" src="./placeholder-speaker.png" alt="Current Speaker">
+            </div>
+            <div class="speaker-details">
+              <h2 id="speakerName">Waiting for session to start...</h2>
+              <p id="speakerRole"></p>
+              <p id="speakerBio" class="speaker-bio"></p>
+            </div>
+          </div>
         </div>
-        <div class="summarize-controls">
-          <label class="toggle-container">
-            <input type="checkbox" id="autoSummarize">
-            <span class="toggle-text">Auto-summarize every 60 seconds</span>
-          </label>
-          <button id="summarizeNow" class="button">Summarize Now</button>
+
+        <div class="transcript-section">
+          <div class="section-header">
+            <h2>Live Transcript</h2>
+            <div class="language-indicator">
+              <span id="currentLanguage"></span>
+            </div>
+          </div>
+          <div id="transcribedText" class="transcription-content"></div>
         </div>
-      </div>
 
-      <div id="recordButtonContainer">
-        <button id="record" class="recordInactive" onclick="window.onRecordPress()">
-          ◉
-        </button>
-      </div>
-
-      <div id="outputSection">
-        <div id="headerText"><h2>Transcription</h2></div>
-        <div id="transcribedText"></div>
-        <div id="controlContainer">
-          <button class="button" onclick="safeClearTranscription()">Clear</button>
+        <div id="summarySection" class="summary-section">
+          <div class="section-header">
+            <h2>Summary</h2>
+            <div class="last-updated">
+              <span id="summaryTimestamp">Not yet available</span>
+            </div>
+          </div>
+          <div id="summaryText" class="summary-content"></div>
         </div>
       </div>
 
-      <div id="summarySection" style="display: none;">
-        <div id="summaryHeader"><h2>Summary</h2></div>
-        <div id="summaryText" dir="rtl"></div>
-      </div>
+      <footer class="audience-footer">
+        <div class="conference-info">
+          <span id="conferenceName"></span>
+        </div>
+        <div class="powered-by">
+          Powered by AWS Transcribe & Google Gemini
+        </div>
+      </footer>
     </div>
   </body>
 </html>

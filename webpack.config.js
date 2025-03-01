@@ -12,6 +12,7 @@ export default {
   mode: "development",
   entry: {
     index: "./src/index.js",
+    admin: "./src/admin.js",
   },
   output: {
     path: path.resolve(__dirname, "public"),
@@ -23,7 +24,7 @@ export default {
     },
     hot: true,
     open: true,
-    port: 8082,
+    port: 8083,
     historyApiFallback: true,
   },
   plugins: [

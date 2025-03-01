@@ -1,0 +1,130 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Conference Transcriber - Admin</title>
+    <link rel="stylesheet" type="text/css" href="./style.css" />
+    <script type="text/javascript" src="./admin.bundle.js" defer></script>
+  </head>
+
+  <body>
+    <div id="adminContainer">
+      <header class="admin-header">
+        <h1>Conference Transcriber - Admin Control</h1>
+        <div class="view-toggle">
+          <a href="./index.html" target="_blank" class="button">Open Audience View</a>
+        </div>
+      </header>
+
+      <div class="admin-panels">
+        <!-- Left panel - Speaker Management -->
+        <div class="admin-panel speakers-panel">
+          <h2>Speaker Management</h2>
+          <div class="speaker-controls">
+            <button id="addSpeakerBtn" class="primary-button">Add New Speaker</button>
+          </div>
+          
+          <div id="speakersList" class="speakers-list">
+            <!-- Speakers will be added here dynamically -->
+          </div>
+          
+          <div id="speakerFormContainer" class="speaker-form-container" style="display: none;">
+            <h3>Add/Edit Speaker</h3>
+            <form id="speakerForm">
+              <div class="form-group">
+                <label for="speakerName">Name:</label>
+                <input type="text" id="speakerName" required>
+              </div>
+              
+              <div class="form-group">
+                <label for="speakerRole">Role/Title:</label>
+                <input type="text" id="speakerRole">
+              </div>
+              
+              <div class="form-group">
+                <label for="speakerBio">Short Bio:</label>
+                <textarea id="speakerBio" rows="3"></textarea>
+              </div>
+              
+              <div class="form-group">
+                <label for="speakerImage">Image URL:</label>
+                <input type="text" id="speakerImage" placeholder="https://example.com/image.jpg">
+              </div>
+              
+              <div class="form-actions">
+                <button type="submit" class="primary-button">Save Speaker</button>
+                <button type="button" id="cancelSpeakerBtn" class="secondary-button">Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+        
+        <!-- Right panel - Transcription Controls -->
+        <div class="admin-panel transcription-panel">
+          <h2>Transcription Controls</h2>
+          
+          <div class="control-section">
+            <h3>Language Settings</h3>
+            <div class="form-group">
+              <label for="adminLanguageList">Language:</label>
+              <select id="adminLanguageList">
+                <option value="nan">Select the language to transcribe</option>
+                <option value="he-IL">Hebrew</option>
+                <option value="en-US">English (US)</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label for="adminVocabList">Custom Vocabulary:</label>
+              <select id="adminVocabList">
+                <option value="">No custom vocabulary</option>
+                <!-- Options will be populated by JavaScript -->
+              </select>
+            </div>
+          </div>
+          
+          <div class="control-section">
+            <h3>Gemini AI Settings</h3>
+            <div class="form-group">
+              <label for="adminGeminiApiKey">Gemini API Key:</label>
+              <input type="password" id="adminGeminiApiKey" placeholder="Enter Gemini API Key" autocomplete="off">
+              <button id="adminSaveApiKey" class="button">Save Key</button>
+            </div>
+            
+            <div class="form-group">
+              <label for="autoSummarizeInterval">Summarization Interval (seconds):</label>
+              <input type="number" id="autoSummarizeInterval" min="30" value="60">
+            </div>
+            
+            <label class="toggle-container">
+              <input type="checkbox" id="adminAutoSummarize">
+              <span class="toggle-text">Auto-summarize</span>
+            </label>
+          </div>
+          
+          <div class="control-section">
+            <h3>Active Speaker</h3>
+            <div class="form-group">
+              <label for="activeSpeaker">Current Speaker:</label>
+              <select id="activeSpeaker">
+                <option value="">Select active speaker</option>
+                <!-- Options will be populated by JavaScript -->
+              </select>
+            </div>
+          </div>
+          
+          <div class="recording-controls">
+            <button id="adminRecord" class="recordInactive">◉ Start Recording</button>
+            <button id="adminPause" class="button" disabled>Pause</button>
+            <button id="adminClear" class="button">Clear Transcript</button>
+          </div>
+          
+          <div class="preview-section">
+            <h3>Live Preview</h3>
+            <div id="adminTranscribedText" class="transcript-preview"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html> 
