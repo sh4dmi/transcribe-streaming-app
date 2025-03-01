@@ -1,0 +1,91 @@
+<!-- Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+SPDX-License-Identifier: Apache-2.0
+ABOUT THIS NODE.JS EXAMPLE: This example works with the AWS SDK for JavaScript version 3 (v3),
+which is available at https://github.com/aws/aws-sdk-js-v3.
+
+Purpose:
+index.html is the front-end HTML code for a tutorial demonstrating how to stream speech using Amazon Transcribe.
+*/
+-->
+
+<!-- snippet-start:[transcribe.HTML.streaming.indexv3] -->
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Streaming Speech to Text</title>
+    <link rel="stylesheet" type="text/css" href="./style.css" />
+    <script type="text/javascript" src="./index.bundle.js" defer></script>
+    <script>
+      // Fallback in case window.clearTranscription is not available when button is clicked
+      function safeClearTranscription() {
+        if (window.clearTranscription) {
+          window.clearTranscription();
+        } else {
+          const transcribedText = document.getElementById("transcribedText");
+          if (transcribedText) {
+            transcribedText.innerHTML = "";
+          }
+        }
+      }
+    </script>
+  </head>
+
+  <body>
+    <div id="mainContainer">
+      <h1>Streaming Speech to Text</h1>
+      <select id="inputLanguageList">
+        <option value="nan">Select the language you are going to speak</option>
+        <option value="he-IL">Hebrew</option>
+      </select>
+
+      <div class="vocab-section">
+        <h3>Custom Vocabulary</h3>
+        <select id="vocabList">
+          <option value="">No custom vocabulary</option>
+          <!-- Options will be populated by JavaScript -->
+        </select>
+      </div>
+
+      <div class="gemini-section">
+        <h3>Gemini AI Summarization</h3>
+        <div class="api-key-input">
+          <input 
+            type="password" 
+            id="geminiApiKey" 
+            placeholder="Enter Gemini API Key" 
+            autocomplete="off"
+          />
+          <button id="saveApiKey" class="button">Save Key</button>
+        </div>
+        <div class="summarize-controls">
+          <label class="toggle-container">
+            <input type="checkbox" id="autoSummarize">
+            <span class="toggle-text">Auto-summarize every 60 seconds</span>
+          </label>
+          <button id="summarizeNow" class="button">Summarize Now</button>
+        </div>
+      </div>
+
+      <div id="recordButtonContainer">
+        <button id="record" class="recordInactive" onclick="window.onRecordPress()">
+          ◉
+        </button>
+      </div>
+
+      <div id="outputSection">
+        <div id="headerText"><h2>Transcription</h2></div>
+        <div id="transcribedText"></div>
+        <div id="controlContainer">
+          <button class="button" onclick="safeClearTranscription()">Clear</button>
+        </div>
+      </div>
+
+      <div id="summarySection" style="display: none;">
+        <div id="summaryHeader"><h2>Summary</h2></div>
+        <div id="summaryText" dir="rtl"></div>
+      </div>
+    </div>
+  </body>
+</html>
+<!-- snippet-end:[transcribe.HTML.streaming.indexv3] -->
