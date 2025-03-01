@@ -1,0 +1,125 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Conference Transcriber - Conference Details</title>
+    <link rel="stylesheet" type="text/css" href="./style.css" />
+    <link rel="stylesheet" type="text/css" href="./admin-style.css" />
+    <script type="text/javascript" src="./admin-conference.bundle.js" defer></script>
+  </head>
+
+  <body>
+    <div id="adminContainer">
+      <header class="admin-header">
+        <h1>Conference Transcriber - Conference Details</h1>
+        <div class="admin-nav">
+          <a href="./admin.html" class="button">Main Admin</a>
+          <a href="./admin-speakers.html" class="button">Speaker Management</a>
+          <a href="./admin-conference.html" class="button active">Conference Details</a>
+          <a href="./admin-transcription.html" class="button">Transcription Controls</a>
+          <a href="./admin-questions.html" class="button">Audience Questions</a>
+        </div>
+        <div class="view-toggle">
+          <a href="./index.html" target="_blank" class="button">Open Audience View</a>
+          <a href="./conference.html" target="_blank" class="button">Open Conference Details</a>
+        </div>
+      </header>
+
+      <div class="admin-panels">
+        <!-- Conference details panel -->
+        <div class="admin-panel conference-details-panel">
+          <h2>Conference Information</h2>
+          
+          <div class="form-group">
+            <label for="conferenceName">Conference Name</label>
+            <input type="text" id="conferenceName" placeholder="e.g. AWS Developer Conference 2023">
+          </div>
+          
+          <div class="form-group">
+            <label for="conferenceDate">Conference Date</label>
+            <input type="text" id="conferenceDate" placeholder="e.g. June 12-15, 2023">
+          </div>
+          
+          <div class="form-group">
+            <label for="conferenceLocation">Location</label>
+            <input type="text" id="conferenceLocation" placeholder="e.g. Seattle Convention Center">
+          </div>
+          
+          <div class="form-group">
+            <label for="conferenceAttendees">Expected Attendees</label>
+            <input type="text" id="conferenceAttendees" placeholder="e.g. 500+">
+          </div>
+          
+          <div class="form-group">
+            <label for="conferenceAbout">About the Conference</label>
+            <textarea id="conferenceAbout" rows="4" placeholder="Describe the purpose and focus of the conference..."></textarea>
+          </div>
+          
+          <div class="form-group">
+            <label for="conferenceVenue">Venue Details</label>
+            <textarea id="conferenceVenue" rows="3" placeholder="Details about the venue, directions, accessibility..."></textarea>
+          </div>
+          
+          <h2>Conference Schedule</h2>
+          
+          <div id="scheduleContainer">
+            <!-- Schedule days will be added here -->
+          </div>
+          
+          <button id="addDayBtn" class="secondary-button">Add Day</button>
+          
+          <div class="form-actions">
+            <button id="saveConferenceBtn" class="primary-button">Save Conference Details</button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Templates -->
+      <template id="scheduleDayTemplate">
+        <div class="schedule-day">
+          <div class="day-header">
+            <input type="text" class="day-title" placeholder="Day 1 - June 12, 2023">
+            <button class="remove-day-btn">Remove Day</button>
+          </div>
+          <div class="day-items">
+            <!-- Schedule items will be added here -->
+          </div>
+          <button class="secondary-button add-item-btn">Add Item</button>
+        </div>
+      </template>
+      
+      <template id="scheduleItemTemplate">
+        <div class="schedule-item-row">
+          <div class="schedule-item-content">
+            <div class="form-group">
+              <label>Time</label>
+              <input type="text" class="schedule-time" placeholder="9:00 AM - 10:30 AM">
+            </div>
+            <div class="form-group">
+              <label>Title</label>
+              <input type="text" class="schedule-title" placeholder="Welcome Keynote">
+            </div>
+            <div class="form-group">
+              <label>Speaker</label>
+              <input type="text" class="schedule-speaker" placeholder="John Smith">
+            </div>
+            <div class="form-group">
+              <label>Description</label>
+              <input type="text" class="schedule-description" placeholder="Opening remarks and conference overview">
+            </div>
+            <div class="form-group">
+              <label>Type</label>
+              <select class="schedule-type">
+                <option value="presentation">Presentation</option>
+                <option value="panel">Panel</option>
+                <option value="workshop">Workshop</option>
+                <option value="break">Break</option>
+              </select>
+            </div>
+          </div>
+          <button class="remove-item-btn">×</button>
+        </div>
+      </template>
+    </div>
+  </body>
+</html> 

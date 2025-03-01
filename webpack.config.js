@@ -14,6 +14,10 @@ export default {
     index: "./src/index.js",
     admin: "./src/admin.js",
     conference: "./src/conference.js",
+    "admin-speakers": "./src/admin-speakers.js",
+    "admin-conference": "./src/admin-conference.js",
+    "admin-transcription": "./src/admin-transcription.js",
+    "admin-questions": "./src/admin-questions.js",
   },
   output: {
     path: path.resolve(__dirname, "public"),
@@ -25,7 +29,7 @@ export default {
     },
     hot: true,
     open: true,
-    port: 8085,
+    port: 80,
     historyApiFallback: true,
   },
   plugins: [

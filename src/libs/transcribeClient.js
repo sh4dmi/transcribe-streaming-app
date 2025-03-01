@@ -19,6 +19,7 @@ import {
 import { TranscribeClient, ListVocabulariesCommand } from "@aws-sdk/client-transcribe";
 import MicrophoneStream from "microphone-stream";
 import * as awsID from "./awsID.js";
+import { getStorageItem, setStorageItem, STORAGE_KEYS } from '../utils/localStorage.js';
 
 /** @type {MicrophoneStream} */
 const MicrophoneStreamImpl = MicrophoneStream.default;
@@ -38,14 +39,22 @@ let transcribeClient = undefined;
  */
 export const startRecording = async (language, callback, vocabularyName = null) => {
   if (!language) {
+    console.error("No language specified for transcription");
     return false;
   }
+  
+  // Stop any existing recording session
   if (microphoneStream || transcribeClient) {
     stopRecording();
   }
+  
+  console.log(`Starting recording with language: ${language}, vocabulary: ${vocabularyName || "none"}`);
+  
   createTranscribeClient();
-  createMicrophoneStream();
+  await createMicrophoneStream();
   await startStreaming(language, callback, vocabularyName);
+  
+  return true;
 };
 
 export const stopRecording = () => {
@@ -130,23 +139,36 @@ const startStreaming = async (language, callback, vocabularyName = null) => {
   };
   
   // Add vocabulary filter if provided
-  if (vocabularyName) {
+  if (vocabularyName && vocabularyName !== "none") {
+    console.log(`Adding custom vocabulary to transcription: ${vocabularyName}`);
     commandOptions.VocabularyName = vocabularyName;
-    console.log(`Using custom vocabulary: ${vocabularyName}`);
   }
   
-  const command = new StartStreamTranscriptionCommand(commandOptions);
-  const data = await transcribeClient.send(command);
-  
-  for await (const event of data.TranscriptResultStream) {
-    for (const result of event.TranscriptEvent.Transcript.Results || []) {
-      if (result.IsPartial === false) {
-        const noOfResults = result.Alternatives[0].Items.length;
-        for (let i = 0; i < noOfResults; i++) {
-          console.log(result.Alternatives[0].Items[i].Content);
-          callback(`${result.Alternatives[0].Items[i].Content} `);
-        }
+  try {
+    const command = new StartStreamTranscriptionCommand(commandOptions);
+    const data = await transcribeClient.send(command);
+    
+    for await (const event of data.TranscriptResultStream) {
+      handleTranscriptionResult(event.TranscriptEvent.Transcript, callback);
+    }
+  } catch (error) {
+    console.error("Error in startStreaming:", error);
+    // If there's an error with the vocabulary, try without it
+    if (vocabularyName && error.message.includes("vocabulary")) {
+      console.log("Retrying without custom vocabulary");
+      const retryCommand = new StartStreamTranscriptionCommand({
+        LanguageCode: language,
+        MediaEncoding: "pcm",
+        MediaSampleRateHertz: SAMPLE_RATE,
+        AudioStream: getAudioStream(),
+      });
+      const data = await transcribeClient.send(retryCommand);
+      
+      for await (const event of data.TranscriptResultStream) {
+        handleTranscriptionResult(event.TranscriptEvent.Transcript, callback);
       }
+    } else {
+      throw error;
     }
   }
 };
@@ -181,5 +203,34 @@ const encodePCMChunk = (chunk) => {
   }
   return Buffer.from(buffer);
 };
+
+// Handle transcription result
+export function handleTranscriptionResult(transcriptEvent, callback) {
+  if (!transcriptEvent.Results || transcriptEvent.Results.length === 0) {
+    return;
+  }
+  
+  const results = transcriptEvent.Results;
+  
+  results.forEach(result => {
+    if (result.IsPartial === false) {
+      // Only process when we have final results
+      if (result.Alternatives && result.Alternatives.length > 0) {
+        const transcript = result.Alternatives[0].Transcript;
+        
+        console.log("New transcription text: ", transcript);
+        
+        // Call the callback with the new text
+        if (callback && transcript) {
+          callback(transcript + " ");
+        }
+        
+        // Also update localStorage for cross-component sharing using utility function
+        setStorageItem(STORAGE_KEYS.TRANSCRIPTION_TEXT, 
+          (getStorageItem(STORAGE_KEYS.TRANSCRIPTION_TEXT, "") + transcript + " "));
+      }
+    }
+  });
+}
 
 // snippet-end:[transcribeClient.JavaScript.streaming.createclientv3]

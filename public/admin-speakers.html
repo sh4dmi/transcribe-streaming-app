@@ -1,0 +1,71 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Conference Transcriber - Speaker Management</title>
+    <link rel="stylesheet" type="text/css" href="./style.css" />
+    <link rel="stylesheet" type="text/css" href="./admin-style.css" />
+    <script type="text/javascript" src="./admin-speakers.bundle.js" defer></script>
+  </head>
+
+  <body>
+    <div id="adminContainer">
+      <header class="admin-header">
+        <h1>Conference Transcriber - Speaker Management</h1>
+        <div class="admin-nav">
+          <a href="./admin.html" class="button">Main Admin</a>
+          <a href="./admin-speakers.html" class="button active">Speaker Management</a>
+          <a href="./admin-conference.html" class="button">Conference Details</a>
+          <a href="./admin-transcription.html" class="button">Transcription Controls</a>
+          <a href="./admin-questions.html" class="button">Audience Questions</a>
+        </div>
+        <div class="view-toggle">
+          <a href="./index.html" target="_blank" class="button">Open Audience View</a>
+          <a href="./conference.html" target="_blank" class="button">Open Conference Details</a>
+        </div>
+      </header>
+
+      <div class="admin-panels">
+        <!-- Speaker management panel -->
+        <div class="admin-panel speakers-panel">
+          <h2>Speaker Management</h2>
+          
+          <div class="speaker-controls">
+            <button id="addSpeakerBtn" class="primary-button">Add New Speaker</button>
+          </div>
+          
+          <div id="speakersList" class="speakers-list">
+            <!-- Speaker cards will be displayed here -->
+          </div>
+          
+          <div id="speakerFormContainer" class="speaker-form-container" style="display: none;">
+            <h3 id="speakerFormTitle">Add New Speaker</h3>
+            <form id="speakerForm">
+              <div class="form-group">
+                <label for="speakerName">Name</label>
+                <input type="text" id="speakerName" required>
+              </div>
+              <div class="form-group">
+                <label for="speakerRole">Role/Title</label>
+                <input type="text" id="speakerRole" required>
+              </div>
+              <div class="form-group">
+                <label for="speakerBio">Short Bio</label>
+                <textarea id="speakerBio" rows="3"></textarea>
+              </div>
+              <div class="form-group">
+                <label for="speakerImage">Image URL</label>
+                <input type="text" id="speakerImage" placeholder="http://...">
+              </div>
+              <input type="hidden" id="speakerId">
+              <div class="form-actions">
+                <button type="submit" class="primary-button">Save Speaker</button>
+                <button type="button" id="cancelSpeakerBtn" class="secondary-button">Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html> 

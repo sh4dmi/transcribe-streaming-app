@@ -5,6 +5,9 @@
 ABOUT THIS NODE.JS EXAMPLE: This handles the audience view for the conference transcription app.
 */
 
+import { getStorageItem, setStorageItem, addQuestion, STORAGE_KEYS } from './utils/localStorage.js';
+import { formatTime, formatTimestamp, highlightKeywords } from './utils/formatters.js';
+
 // Initialize global variables
 let connectionStatus = null;
 let speakerImage = null;
@@ -166,7 +169,7 @@ function startSyncIntervals() {
 
 // Sync recording status from admin
 function syncRecordingStatus() {
-  const isRecording = localStorage.getItem("isRecording") === "true";
+  const isRecording = getStorageItem(STORAGE_KEYS.IS_RECORDING, "false") === "true";
   
   if (isRecording) {
     connectionStatus.textContent = "שידור חי";
@@ -183,7 +186,7 @@ function syncRecordingStatus() {
   }
   
   // Sync language if available
-  const language = localStorage.getItem("currentLanguage");
+  const language = getStorageItem(STORAGE_KEYS.CURRENT_LANGUAGE, "");
   if (language && currentLanguage) {
     const languageDisplay = language === "he-IL" ? "עברית" : 
                           language === "en-US" ? "אנגלית (ארה״ב)" : 
@@ -209,10 +212,7 @@ function syncRecordingStatus() {
 
 // Load speaker transcriptions from localStorage
 function loadSpeakerTranscriptions() {
-  const savedTranscriptions = localStorage.getItem("speakerTranscriptions");
-  if (savedTranscriptions) {
-    speakerTranscriptions = JSON.parse(savedTranscriptions);
-  }
+  speakerTranscriptions = getStorageItem(STORAGE_KEYS.SPEAKER_TRANSCRIPTIONS, {});
 }
 
 // Save speaker transcriptions to localStorage
@@ -222,8 +222,8 @@ function saveSpeakerTranscriptions() {
 
 // Sync transcription from admin
 function syncTranscription() {
-  const text = localStorage.getItem("transcriptionText");
-  const currentSpeakerId = localStorage.getItem("currentSpeakerId");
+  const text = getStorageItem(STORAGE_KEYS.TRANSCRIPTION_TEXT, "");
+  const currentSpeakerId = getStorageItem(STORAGE_KEYS.CURRENT_SPEAKER_ID, "");
   
   if (text && text.trim() !== "" && currentSpeakerId) {
     // Update the speaker's transcription
@@ -245,7 +245,7 @@ function syncTranscription() {
       });
       
       // Save to localStorage
-      saveSpeakerTranscriptions();
+      setStorageItem(STORAGE_KEYS.SPEAKER_TRANSCRIPTIONS, speakerTranscriptions);
     }
     
     // Process all transcriptions for display
@@ -326,9 +326,8 @@ function scrollToLatest() {
 
 // Load speaker data
 function loadSpeakerData() {
-  const savedSpeakers = localStorage.getItem("conferenceSpeakers");
-  if (savedSpeakers) {
-    speakersCache = JSON.parse(savedSpeakers);
+  speakersCache = getStorageItem(STORAGE_KEYS.SPEAKERS, []);
+  if (speakersCache.length > 0) {
     renderSpeakersGallery();
   }
 }
@@ -360,14 +359,14 @@ function renderSpeakersGallery() {
   });
 }
 
-// Sync current speaker info
+// Sync speaker info
 function syncSpeakerInfo() {
   // Load speakers if not already loaded
   if (speakersCache.length === 0) {
     loadSpeakerData();
   }
   
-  const currentSpeakerId = localStorage.getItem("currentSpeakerId");
+  const currentSpeakerId = getStorageItem(STORAGE_KEYS.CURRENT_SPEAKER_ID, "");
   if (currentSpeakerId && speakersCache.length > 0) {
     const speaker = speakersCache.find(s => s.id === currentSpeakerId);
     if (speaker) {
@@ -395,8 +394,8 @@ function syncSpeakerInfo() {
 
 // Sync summary
 function syncSummary() {
-  const summary = localStorage.getItem("summaryText");
-  const timestamp = localStorage.getItem("summaryTimestamp");
+  const summary = getStorageItem(STORAGE_KEYS.SUMMARY_TEXT, "");
+  const timestamp = getStorageItem(STORAGE_KEYS.SUMMARY_TIMESTAMP, "");
   
   if (summary && summary.trim() !== "") {
     summarySection.style.display = "block";
@@ -414,16 +413,24 @@ function syncSummary() {
 
 // Set conference details
 function setConferenceDetails() {
-  const name = localStorage.getItem("conferenceName") || "כנס תמלול חי";
+  const conferenceDetails = getStorageItem(STORAGE_KEYS.CONFERENCE_DETAILS, {});
+  const name = conferenceDetails.name || "כנס תמלול חי";
   conferenceName.textContent = name;
   
-  // Set conference date (today's date for demo)
-  const today = new Date();
-  const dateString = today.toLocaleDateString('he-IL', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
+  // Set conference date
+  let dateString;
+  if (conferenceDetails.date) {
+    dateString = conferenceDetails.date;
+  } else {
+    // Use today's date as fallback
+    const today = new Date();
+    dateString = today.toLocaleDateString('he-IL', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  }
+  
   if (conferenceDate) {
     conferenceDate.textContent = dateString;
   }
@@ -537,7 +544,7 @@ function toggleContrastMode() {
   document.body.classList.toggle('high-contrast');
   
   // Save preference
-  localStorage.setItem('highContrast', document.body.classList.contains('high-contrast'));
+  setStorageItem(STORAGE_KEYS.HIGH_CONTRAST, document.body.classList.contains('high-contrast').toString());
 }
 
 // Increase font size
@@ -565,7 +572,7 @@ function resetFontSize() {
 // Check for stored preferences
 function loadUserPreferences() {
   // High contrast preference
-  const highContrast = localStorage.getItem('highContrast') === 'true';
+  const highContrast = getStorageItem(STORAGE_KEYS.HIGH_CONTRAST, "false") === "true";
   if (highContrast) {
     document.body.classList.add('high-contrast');
   }
@@ -580,6 +587,29 @@ function setupScrollTracking() {
       isManuallyScrolled = !isNearBottom;
     });
   }
+}
+
+// Submit a question to a speaker
+function submitQuestion() {
+  if (!questionInput) return;
+  
+  const questionText = questionInput.value.trim();
+  if (!questionText) {
+    alert("אנא הזן את שאלתך");
+    return;
+  }
+  
+  // Get current speaker ID if available
+  const speakerId = getStorageItem(STORAGE_KEYS.CURRENT_SPEAKER_ID);
+  
+  // Use the utility function to add a question
+  addQuestion(questionText, speakerId);
+  
+  // Clear the input
+  questionInput.value = '';
+  
+  // Show confirmation
+  alert("השאלה נשלחה בהצלחה");
 }
 
 // App initialization

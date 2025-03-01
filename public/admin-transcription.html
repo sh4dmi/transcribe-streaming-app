@@ -1,0 +1,111 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Conference Transcriber - Transcription Controls</title>
+    <link rel="stylesheet" type="text/css" href="./style.css" />
+    <link rel="stylesheet" type="text/css" href="./admin-style.css" />
+    <script type="text/javascript" src="./admin-transcription.bundle.js" defer></script>
+  </head>
+
+  <body>
+    <div id="adminContainer">
+      <header class="admin-header">
+        <h1>Conference Transcriber - Transcription Controls</h1>
+        <div class="admin-nav">
+          <a href="./admin.html" class="button">Main Admin</a>
+          <a href="./admin-speakers.html" class="button">Speaker Management</a>
+          <a href="./admin-conference.html" class="button">Conference Details</a>
+          <a href="./admin-transcription.html" class="button active">Transcription Controls</a>
+          <a href="./admin-questions.html" class="button">Audience Questions</a>
+        </div>
+        <div class="view-toggle">
+          <a href="./index.html" target="_blank" class="button">Open Audience View</a>
+          <a href="./conference.html" target="_blank" class="button">Open Conference Details</a>
+        </div>
+      </header>
+
+      <div class="admin-panels">
+        <!-- Transcription control panel -->
+        <div class="admin-panel transcription-panel">
+          <h2>Transcription Controls</h2>
+          
+          <!-- Language settings -->
+          <div class="control-section">
+            <h3>Language Settings</h3>
+            <div class="form-group">
+              <label for="transcriptionLanguage">Transcription Language</label>
+              <select id="transcriptionLanguage">
+                <option value="en-US">English (US)</option>
+                <option value="he-IL">Hebrew</option>
+                <option value="es-ES">Spanish</option>
+                <option value="fr-FR">French</option>
+                <option value="de-DE">German</option>
+                <option value="ja-JP">Japanese</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="customVocabulary">Custom Vocabulary (comma separated)</label>
+              <input type="text" id="customVocabulary" placeholder="e.g., Amazon CloudWatch, Lambda, S3">
+            </div>
+          </div>
+          
+          <!-- Gemini AI settings -->
+          <div class="control-section">
+            <h3>Gemini AI Settings</h3>
+            <div class="form-group">
+              <label for="geminiApiKey">Gemini API Key (optional)</label>
+              <input type="text" id="geminiApiKey" placeholder="Enter your Gemini API key">
+            </div>
+            <div class="form-group">
+              <label for="summarizationInterval">Summarization Interval (minutes)</label>
+              <input type="number" id="summarizationInterval" value="10" min="1" max="60">
+            </div>
+            <div class="form-group">
+              <input type="checkbox" id="autoSummarize">
+              <label for="autoSummarize">Auto-summarize</label>
+            </div>
+          </div>
+          
+          <!-- Active speaker selection -->
+          <div class="control-section">
+            <h3>Active Speaker</h3>
+            <div class="form-group">
+              <label for="activeSpeaker">Current Speaker</label>
+              <select id="activeSpeaker">
+                <option value="">Select a speaker</option>
+                <!-- Options will be populated dynamically -->
+              </select>
+            </div>
+          </div>
+          
+          <!-- Recording controls -->
+          <div class="control-section">
+            <h3>Recording Controls</h3>
+            <div class="recording-controls">
+              <button id="startRecordingBtn" class="recordInactive">
+                <span>Start Recording</span>
+              </button>
+              <button id="pauseRecordingBtn" class="button" disabled>
+                <span>Pause Recording</span>
+              </button>
+              <button id="clearTranscriptBtn" class="button">
+                <span>Clear Transcript</span>
+              </button>
+            </div>
+          </div>
+          
+          <!-- Live preview -->
+          <div class="preview-section">
+            <h3>Live Preview</h3>
+            <div id="transcriptPreview" class="transcript-preview">
+              <div class="transcription-entry">
+                <span class="transcript-timestamp">Waiting for transcription...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html> 

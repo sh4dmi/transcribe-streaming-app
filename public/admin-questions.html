@@ -1,0 +1,60 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Conference Transcriber - Audience Questions</title>
+    <link rel="stylesheet" type="text/css" href="./style.css" />
+    <link rel="stylesheet" type="text/css" href="./admin-style.css" />
+    <script type="text/javascript" src="./admin-questions.bundle.js" defer></script>
+  </head>
+
+  <body>
+    <div id="adminContainer">
+      <header class="admin-header">
+        <h1>Conference Transcriber - Audience Questions</h1>
+        <div class="admin-nav">
+          <a href="./admin.html" class="button">Main Admin</a>
+          <a href="./admin-speakers.html" class="button">Speaker Management</a>
+          <a href="./admin-conference.html" class="button">Conference Details</a>
+          <a href="./admin-transcription.html" class="button">Transcription Controls</a>
+          <a href="./admin-questions.html" class="button active">Audience Questions</a>
+        </div>
+        <div class="view-toggle">
+          <a href="./index.html" target="_blank" class="button">Open Audience View</a>
+          <a href="./conference.html" target="_blank" class="button">Open Conference Details</a>
+        </div>
+      </header>
+
+      <div class="admin-panels">
+        <!-- Questions from audience -->
+        <div class="admin-panel questions-panel">
+          <h2>Questions from Audience</h2>
+          
+          <div class="question-filters">
+            <button class="filter-button active" data-filter="all">All Questions</button>
+            <button class="filter-button" data-filter="pending">Pending</button>
+            <button class="filter-button" data-filter="answered">Answered</button>
+          </div>
+          
+          <div id="questionsList" class="questions-list">
+            <!-- Questions will be added here dynamically -->
+            <div class="no-questions-message">No questions yet.</div>
+          </div>
+          
+          <div id="questionAnswerContainer" class="control-section" style="display: none;">
+            <h3>Answer Question</h3>
+            <div id="currentQuestion" class="current-question"></div>
+            <div class="form-group">
+              <label for="questionAnswer">Your Answer:</label>
+              <textarea id="questionAnswer" rows="3"></textarea>
+            </div>
+            <div class="form-actions">
+              <button id="submitAnswerBtn" class="primary-button">Submit Answer</button>
+              <button id="skipQuestionBtn" class="secondary-button">Skip Question</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html> 
