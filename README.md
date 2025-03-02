@@ -1,211 +1,90 @@
-# Cross-service example: Building an Amazon Transcribe streaming app
+# Conference Transcription App with SQLite
 
-## Purpose
+This application provides a real-time transcription system for conferences with speaker management, Q&A capabilities, and summarization powered by Amazon Transcribe and Gemini AI.
 
-The cross-service example demonstrates how to build an app that records and transcribes an audio stream in real-time. It
-also demonstrates how to translate the transcription and send it via email to your contacts. The app uses the following
-AWS services:
+## Features
 
-- [Amazon Transcribe](https://aws.amazon.com/transcribe/)
-- [Amazon Comprehend](https://aws.amazon.com/comprehend/)
-- [Amazon Translate](https://aws.amazon.com/translate/)
-- [Amazon Simple Email Services (SES)](https://aws.amazon.com/ses/)
+- **Real-time transcription** using Amazon Transcribe Streaming API
+- **Speaker management** to track who is speaking
+- **SQLite database** for persistent storage of all data
+- **Q&A system** for audience to submit questions
+- **AI-powered summarization** via Gemini API
+- **Multi-language support**
+- **Admin interface** for managing speakers, conference details, and Q&A
 
-The JavaScript SDK Transcribe Streaming client encapsulates the API into a JavaScript
-library that can be run on browsers, Node.js and potentially React Native. By default,
-the client uses HTTP/2 connection on Node.js, and uses WebSocket connection on browsers
-and React Native.
+## Setup and Installation
 
-## Prerequisites
+1. Install dependencies:
+   ```
+   npm install
+   ```
 
-To build this cross-service example, you need the following:
+2. Start the application (both frontend and backend):
+   ```
+   npm start
+   ```
 
-- An AWS account. For more information see [AWS SDKs and Tools Reference Guide](https://docs.aws.amazon.com/sdkref/latest/guide/overview.html).
-- A project environment to run this Node JavaScript example, and install the required AWS SDK for JavaScript and third-party modules. For instructions, see [Create a Node.js project environment](#create-a-nodejs-project-environment) on this page.
-- At least one email address verified on Amazon SES. For instructions, see [Verifying an email address on Amazon SES](#verifying-an-email-address-on-amazon-ses).
-- The following AWS resources:
-  - An unauthenticated AWS Identity and Access Management (IAM) user role with the following permissions:
-    - ses:SendEmail
-    - transcribe:StartStreamTranscriptionWebSocket
-    - comprehend:DetectDominantLanguage
-    - translate: TranslateText
+   This will start:
+   - The SQLite backend server on port 3000
+   - The frontend webpack dev server on port 8080
 
-**Note**: An unauthenticated role enables you to provide permissions to unauthenticated users to use the AWS Services. To create an authenticated role, see [Amazon Cognito Identity Pools (Federated Identities)](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-identity.html).
+3. Open the application:
+   - Main audience view: http://localhost:8080
+   - Admin interface: http://localhost:8080/admin.html
 
-For instructions on creating the minimum resources required for this tutorial, see [Create the resources](#create-the-resources) on this page.
+## Architecture
 
-## ⚠ Important
+The application consists of:
 
-- We recommend that you grant this code least privilege, or at most the minimum permissions required to perform the task. For more information, see [Grant Least Privilege](https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html#grant-least-privilege) in the _AWS Identity and Access Management User Guide_.
-- This code has not been tested in all AWS Regions. Some AWS services are available only in specific [Regions](https://aws.amazon.com/about-aws/global-infrastructure/regional-product-services).
-- Running this code might result in charges to your AWS account. We recommend you destroy the resources when you are finished. For instructions, see [Destroying the resources](#destroying-the-resources).
-- Running the unit tests might result in charges to your AWS account.
+1. **Frontend**:
+   - Built with vanilla JavaScript
+   - Webpack for bundling
+   - Real-time transcription UI
+   - Speaker gallery
+   - Question submission form
 
-## Create the resources
+2. **Backend**:
+   - Express.js server
+   - SQLite database for persistent storage
+   - RESTful API endpoints for data management
 
-You can create the AWS resources required for this cross-service example using either of the following:
+3. **Database**:
+   - SQLite database with tables for:
+     - Speakers
+     - Transcriptions
+     - Questions
+     - Conference settings
 
-- [The Amazon CloudFormation](#create-the-resources-using-amazon-cloudformation)
-- [The AWS Management Console](#create-the-resources-using-the-aws-management-console)
+## Data Management
 
-### Create the resources using Amazon CloudFormation
+All data is stored in SQLite for persistence. The admin interface includes a "Reset All Data" button that allows you to clear all speakers, transcriptions, and questions from the database.
 
-To run the stack using the AWS CLI:
+## API Endpoints
 
-1. Install and configure the AWS CLI following the instructions in the AWS CLI User Guide.
+### Speakers
+- `GET /api/speakers` - Get all speakers
+- `POST /api/speakers` - Add a new speaker
+- `PUT /api/speakers/:id` - Update a speaker
+- `DELETE /api/speakers/:id` - Delete a speaker
 
-2. Open the AWS Command Console from the _./transcribe-streaming-app_ folder.
+### Transcriptions
+- `GET /api/transcriptions` - Get all transcriptions
+- `GET /api/transcriptions/speaker/:speakerId` - Get transcriptions for a specific speaker
+- `POST /api/transcriptions` - Add a new transcription
 
-3. Run the following command, replacing _STACK_NAME_ with a unique name for the stack.
+### Questions
+- `GET /api/questions` - Get all questions
+- `POST /api/questions` - Add a new question
+- `PUT /api/questions/:id/answer` - Answer a question
+- `PUT /api/questions/:id/skip` - Skip a question
 
-```
-aws cloudformation create-stack --stack-name STACK_NAME --template-body file://setup.yaml --capabilities CAPABILITY_IAM
-```
+### Conference Settings
+- `GET /api/settings` - Get conference settings
+- `PATCH /api/settings` - Update conference settings
 
-**Important**: The stack name must be unique within an AWS Region and AWS account. You can specify up to 128 characters, and numbers and hyphens are allowed.
+### Reset Data
+- `POST /api/reset` - Reset all data in the database
 
-4. Open [AWS CloudFormation in the AWS Management Console](https://aws.amazon.com/cloudformation/), and open the **Stacks** page.
+## License
 
-![ ](images/cloud_formation_stacks.png)
-
-5. Choose the **Resources** tab. The **Physical ID** of the **IDENTITY_POOL_ID** you require for this cross-service example is displayed.
-
-![ ](images/cloud_formation_resources_tab.png)
-
-For more information on the create-stack command parameters, see the [AWS CLI Command Reference guide](https://docs.aws.amazon.com/cli/latest/reference/cloudformation/create-stack.html), and the [AWS CloudFormation User Guide](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-cli-creating-stack.html).
-
-### Create the resources using the AWS Management Console
-
-#### Create an unauthenticated user role
-
-1. Open [AWS Cognito in the AWS Management Console](https://aws.amazon.com/cloudformation/), and open the _Stacks_ page.
-2. Choose **Manage Identity Pools**.
-3. Choose **Create new identity pool**.
-4. In the **Identity pool name** field, give your identity pool a name.
-5. Select the **Enable access to unauthenticated identities** checkbox.
-6. Choose **Create Pool**.
-7. Choose **Allow**.
-8. Take note of the **Identity pool ID**, which is highlighted in red in the **Get AWS Credentials** section.
-
-![ ](images/identity_pool_ids.png)
-
-9. Choose **Edit identity pool**.
-10. Take note of the name of the role in the **Unauthenticated role** field.
-
-#### Adding permissions to an unauthenticated user role
-
-11. Open [IAM in the AWS Management Console](https://aws.amazon.com/iam/), and open the _Roles_ page.
-12. Search for the unauthenticated role you just created.
-13. Open the role.
-14. Click the down arrow beside the policy name.
-15. Choose **Edit Policy**.
-16. Choose the **JSON** tab.
-17. Delete the existing content, and paste the code below into it.
-
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": ["mobileanalytics:PutEvents", "cognito-sync:*"],
-      "Resource": "*",
-      "Effect": "Allow"
-    },
-    {
-      "Action": "ses:SendEmail",
-      "Resource": "*",
-      "Effect": "Allow"
-    },
-    {
-      "Action": "transcribe:StartStreamTranscriptionWebSocket",
-      "Resource": "*",
-      "Effect": "Allow"
-    },
-    {
-      "Action": "comprehend:DetectDominantLanguage",
-      "Resource": "*",
-      "Effect": "Allow"
-    },
-    {
-      "Action": "translate:TranslateText",
-      "Resource": "*",
-      "Effect": "Allow"
-    }
-  ]
-}
-```
-
-18. Choose **Review Policy**.
-19. Choose **Save Changes**.
-
-### Verify an email address on Amazon SES
-
-Create and verify an email address in Amazon SES. For more information, see [Creating and verifying identities in Amazon SES](https://docs.aws.amazon.com/ses/latest/dg/creating-identities.html).
-
-## Create a Node.js project environment
-
-1. Clone the [AWS Code Samples repo](https://github.com/awsdocs/aws-doc-sdk-examples) to your local environment.
-   See [the Github documentation](https://docs.github.com/en/github/creating-cloning-and-archiving-repositories/cloning-a-repository) for
-   instructions.
-
-2. Run the following commands in sequence in the terminal to install the AWS service client modules and third-party modules listed in the `package.json`:
-
-```
-npm install
-```
-
-## Building the code
-
-This app runs from the browser, so we create the interface using HTML and CSS.
-The app uses JavaScript to provide basic interactive features, and Node.js to invoke the AWS Services.
-
-### Creating the HTML and CSS
-
-In **index.html**, the **head** section invoke the **recorder.css**, which applies styles to the HTML,
-and the **index.js**, which contains JavaScript and Node.js functions used in the app.
-
-Each button on the interface invokes one of these functions when clicked.
-
-### Creating the JavaScript and Node.js
-
-The **./src/libs/** folders contains a file for each of the AWS Service clients required. In the **awsID.js** file, you must
-replace "REGION" with your AWS Region (e.g. us-west-2), and replace "IDENTITY_POOL_ID" with the Amazon Cognito identity pool id you created in [Create the resources](#create-the-resources) on this page.
-
-**./src/index.js** imports all the required AWS Service and third party modules and contains the UI logic of the app.
-
-Note: When using the app, make sure you use an email address you verified on Amazon SES in [Create the resources](#create-the-resources) on this page.
-
-**Important**: You must bundle all the JavaScript and Node.js code required for the app into a single
-file (**main.js**) to run the app.
-
-### Bundling the scripts
-
-This is a static site consisting only of HTML, CSS, and client-side JavaScript.
-However, a build step is required to enable the modules to work natively in the browser.
-
-To bundle the JavaScript and Node.js for this example in a single file named main.js,
-enter the following commands in sequence in the AWS CLI command line:
-
-```
-npm run build
-```
-
-This will create bundled scripts in the public folder.
-
-## Run the app
-
-```
-npx http-server public
-```
-
-This will create a local web-server that hosts the content in the public folder. Open the URL displayed in the output of this command.
-
-## Destroying the resources
-
-1. Open [AWS CloudFormation in the AWS Management Console](https://aws.amazon.com/cloudformation/), and open the _Stacks_ page.
-
-![ ](images/cloud_formation_stacks.png)
-
-2. Select the stack you created in [Create the resources](#create-the-resources) on this page.
-
-3. Choose **Delete**.
+This sample code is made available under the MIT-0 license. See the LICENSE file.

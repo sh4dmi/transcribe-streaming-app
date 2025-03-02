@@ -9,6 +9,80 @@ ABOUT THIS NODE.JS EXAMPLE: This handles the admin interface for the conference 
 import * as transcribeClient from "./libs/transcribeClient.js";
 import * as geminiClient from "./libs/geminiClient.js";
 
+// Define or reuse the TranscriptionStore
+// Check if TranscriptionStore already exists in the global scope (window)
+if (typeof window.TranscriptionStore === 'undefined') {
+  window.TranscriptionStore = {
+    // Current raw transcription text
+    _rawTranscriptionText: '',
+    
+    // Processed transcriptions by speaker
+    _speakerTranscriptions: {},
+    
+    // Get raw transcription text
+    getRawTranscription() {
+      // Always sync with localStorage first
+      this._rawTranscriptionText = localStorage.getItem("transcriptionText") || '';
+      return this._rawTranscriptionText;
+    },
+    
+    // Get speaker transcriptions
+    getSpeakerTranscriptions() {
+      return this._speakerTranscriptions;
+    },
+    
+    // Load speaker transcriptions from localStorage
+    loadSpeakerTranscriptions() {
+      const savedTranscriptions = localStorage.getItem("speakerTranscriptions");
+      if (savedTranscriptions) {
+        this._speakerTranscriptions = JSON.parse(savedTranscriptions);
+      }
+      return this._speakerTranscriptions;
+    },
+    
+    // Save speaker transcriptions to localStorage
+    saveSpeakerTranscriptions() {
+      localStorage.setItem("speakerTranscriptions", JSON.stringify(this._speakerTranscriptions));
+    },
+    
+    // Update transcription for a specific speaker
+    updateSpeakerTranscription(speakerId, text) {
+      if (!speakerId) return false;
+      
+      // Initialize array for this speaker if it doesn't exist
+      if (!this._speakerTranscriptions[speakerId]) {
+        this._speakerTranscriptions[speakerId] = [];
+      }
+      
+      // Get the last text entry for this speaker
+      const lastEntry = this._speakerTranscriptions[speakerId].length > 0 
+        ? this._speakerTranscriptions[speakerId][this._speakerTranscriptions[speakerId].length - 1]
+        : null;
+      
+      // Only add new text if it's different from the last entry
+      if (!lastEntry || text !== lastEntry.text) {
+        // Add timestamp and text
+        this._speakerTranscriptions[speakerId].push({
+          timestamp: new Date().toISOString(),
+          text: text
+        });
+        
+        // Save to localStorage
+        this.saveSpeakerTranscriptions();
+        return true;
+      }
+      
+      return false;
+    }
+  };
+} else {
+  // TranscriptionStore is already defined in the window object, no need to redefine
+  console.log("Using existing TranscriptionStore from window object");
+}
+
+// Use the global TranscriptionStore
+const TranscriptionStore = window.TranscriptionStore;
+
 // Initialize global variables
 let adminRecord = null;
 let adminPause = null;
@@ -143,6 +217,9 @@ function initializeEventListeners() {
 
 // Load saved data
 function loadSavedData() {
+  // Initialize TranscriptionStore
+  TranscriptionStore.loadSpeakerTranscriptions();
+  
   // Load saved speakers
   const savedSpeakers = localStorage.getItem("conferenceSpeakers");
   if (savedSpeakers) {
@@ -253,6 +330,9 @@ async function startRecording() {
   localStorage.setItem("transcriptionText", "");
   localStorage.setItem("currentLanguage", selectedLanguage);
   
+  // Reset TranscriptionStore
+  TranscriptionStore._rawTranscriptionText = "";
+  
   // Share active speaker info
   if (activeSpeaker.value) {
     localStorage.setItem("currentSpeakerId", activeSpeaker.value);
@@ -303,9 +383,16 @@ function pauseRecording() {
 // Clear transcription
 function clearTranscription() {
   adminTranscribedText.innerHTML = "";
+  
+  // Clear localStorage
   localStorage.setItem("transcriptionText", "");
   localStorage.setItem("summaryText", "");
   localStorage.setItem("summaryTimestamp", "");
+  
+  // Reset TranscriptionStore
+  TranscriptionStore._rawTranscriptionText = "";
+  TranscriptionStore._speakerTranscriptions = {};
+  TranscriptionStore.saveSpeakerTranscriptions();
 }
 
 // Handle transcription data
@@ -313,9 +400,19 @@ function onTranscriptionDataReceived(data) {
   // Update admin view
   adminTranscribedText.insertAdjacentHTML("beforeend", data);
   
-  // Share with audience view
+  // Update raw transcription in localStorage
   const currentText = localStorage.getItem("transcriptionText") || "";
-  localStorage.setItem("transcriptionText", currentText + data);
+  const newText = currentText + data;
+  localStorage.setItem("transcriptionText", newText);
+  
+  // Update TranscriptionStore
+  TranscriptionStore._rawTranscriptionText = newText;
+  
+  // If there's a current speaker, update their transcription
+  const currentSpeakerId = localStorage.getItem("currentSpeakerId");
+  if (currentSpeakerId) {
+    TranscriptionStore.updateSpeakerTranscription(currentSpeakerId, newText);
+  }
 }
 
 // Load custom vocabularies
@@ -611,6 +708,12 @@ function onActiveSpeakerChange() {
   if (selectedSpeakerId) {
     // Share with audience view
     localStorage.setItem("currentSpeakerId", selectedSpeakerId);
+    
+    // If there's current transcription text, associate it with this speaker
+    const currentText = localStorage.getItem("transcriptionText");
+    if (currentText && currentText.trim() !== "") {
+      TranscriptionStore.updateSpeakerTranscription(selectedSpeakerId, currentText);
+    }
   }
 }
 

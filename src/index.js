@@ -5,6 +5,77 @@
 ABOUT THIS NODE.JS EXAMPLE: This handles the audience view for the conference transcription app.
 */
 
+// TranscriptionStore: Single source of truth for transcription data
+// First check if it already exists in the window object
+if (typeof window.TranscriptionStore === 'undefined') {
+  window.TranscriptionStore = {
+    // Current raw transcription text
+    _rawTranscriptionText: '',
+    
+    // Processed transcriptions by speaker
+    _speakerTranscriptions: {},
+    
+    // Get raw transcription text
+    getRawTranscription() {
+      // Always sync with localStorage first
+      this._rawTranscriptionText = localStorage.getItem("transcriptionText") || '';
+      return this._rawTranscriptionText;
+    },
+    
+    // Get speaker transcriptions
+    getSpeakerTranscriptions() {
+      return this._speakerTranscriptions;
+    },
+    
+    // Load speaker transcriptions from localStorage
+    loadSpeakerTranscriptions() {
+      const savedTranscriptions = localStorage.getItem("speakerTranscriptions");
+      if (savedTranscriptions) {
+        this._speakerTranscriptions = JSON.parse(savedTranscriptions);
+      }
+      return this._speakerTranscriptions;
+    },
+    
+    // Save speaker transcriptions to localStorage
+    saveSpeakerTranscriptions() {
+      localStorage.setItem("speakerTranscriptions", JSON.stringify(this._speakerTranscriptions));
+    },
+    
+    // Update transcription for a specific speaker
+    updateSpeakerTranscription(speakerId, text) {
+      if (!speakerId) return false;
+      
+      // Initialize array for this speaker if it doesn't exist
+      if (!this._speakerTranscriptions[speakerId]) {
+        this._speakerTranscriptions[speakerId] = [];
+      }
+      
+      // Get the last text entry for this speaker
+      const lastEntry = this._speakerTranscriptions[speakerId].length > 0 
+        ? this._speakerTranscriptions[speakerId][this._speakerTranscriptions[speakerId].length - 1]
+        : null;
+      
+      // Only add new text if it's different from the last entry
+      if (!lastEntry || text !== lastEntry.text) {
+        // Add timestamp and text
+        this._speakerTranscriptions[speakerId].push({
+          timestamp: new Date().toISOString(),
+          text: text
+        });
+        
+        // Save to localStorage
+        this.saveSpeakerTranscriptions();
+        return true;
+      }
+      
+      return false;
+    }
+  };
+}
+
+// Use the global TranscriptionStore
+const TranscriptionStore = window.TranscriptionStore;
+
 // Initialize global variables
 let connectionStatus = null;
 let speakerImage = null;
@@ -39,9 +110,6 @@ let summarySyncInterval = null;
 
 // Cached speaker data
 let speakersCache = [];
-
-// Cached transcriptions by speaker
-let speakerTranscriptions = {};
 
 // Important keywords to highlight
 const IMPORTANT_KEYWORDS = [
@@ -151,13 +219,13 @@ function initializeEventListeners() {
 
 // Start sync intervals to check for updates from admin
 function startSyncIntervals() {
-  // Check recording status every 2 seconds
+  // Check for recording status changes every 2 seconds
   statusSyncInterval = setInterval(syncRecordingStatus, 2000);
   
   // Check for transcription updates frequently (500ms)
   transcriptionSyncInterval = setInterval(syncTranscription, 500);
   
-  // Check for speaker updates every 3 seconds
+  // Check for speaker changes every 3 seconds
   speakerSyncInterval = setInterval(syncSpeakerInfo, 3000);
   
   // Check for summary updates every 5 seconds
@@ -207,50 +275,35 @@ function syncRecordingStatus() {
   }
 }
 
-// Load speaker transcriptions from localStorage
-function loadSpeakerTranscriptions() {
-  const savedTranscriptions = localStorage.getItem("speakerTranscriptions");
-  if (savedTranscriptions) {
-    speakerTranscriptions = JSON.parse(savedTranscriptions);
-  }
-}
-
-// Save speaker transcriptions to localStorage
-function saveSpeakerTranscriptions() {
-  localStorage.setItem("speakerTranscriptions", JSON.stringify(speakerTranscriptions));
-}
-
 // Sync transcription from admin
 function syncTranscription() {
-  const text = localStorage.getItem("transcriptionText");
+  // Get the raw transcription from TranscriptionStore instead of directly from localStorage
+  const text = TranscriptionStore.getRawTranscription();
   const currentSpeakerId = localStorage.getItem("currentSpeakerId");
   
-  if (text && text.trim() !== "" && currentSpeakerId) {
-    // Update the speaker's transcription
-    if (!speakerTranscriptions[currentSpeakerId]) {
-      speakerTranscriptions[currentSpeakerId] = [];
+  // Display the transcription text even if there's no current speaker ID
+  if (text && text.trim() !== "") {
+    // If we have a current speaker, update their transcription cache
+    if (currentSpeakerId) {
+      // Update the speaker's transcription in TranscriptionStore
+      if (!TranscriptionStore.updateSpeakerTranscription(currentSpeakerId, text)) {
+        console.warn("Failed to update transcription for current speaker");
+      }
     }
     
-    // Get the last text entry for this speaker
-    const lastEntry = speakerTranscriptions[currentSpeakerId].length > 0 
-      ? speakerTranscriptions[currentSpeakerId][speakerTranscriptions[currentSpeakerId].length - 1]
-      : null;
-    
-    // Only add new text if it's different from the last entry
-    if (!lastEntry || text !== lastEntry.text) {
-      // Add timestamp and text
-      speakerTranscriptions[currentSpeakerId].push({
-        timestamp: new Date().toISOString(),
-        text: text
-      });
-      
-      // Save to localStorage
-      saveSpeakerTranscriptions();
-    }
-    
+    // Always update the display regardless of whether we have a speaker ID
     // Process all transcriptions for display
     const formattedText = processAllTranscriptions();
-    transcribedText.innerHTML = formattedText;
+    
+    // If there's no formatted text from the speakers but we have direct transcription text,
+    // display that directly
+    if ((!formattedText || formattedText.trim() === "") && text) {
+      transcribedText.innerHTML = `<div class="transcript-entry">
+        <div class="transcript-text">${text}</div>
+      </div>`;
+    } else {
+      transcribedText.innerHTML = formattedText;
+    }
     
     // Auto-scroll to bottom if not manually scrolled up
     if (!isManuallyScrolled) {
@@ -264,12 +317,24 @@ function processAllTranscriptions() {
   // Combine all speaker transcriptions in chronological order
   const allEntries = [];
   
+  // Check if there are any speaker transcriptions
+  if (Object.keys(TranscriptionStore.getSpeakerTranscriptions()).length === 0) {
+    // If no speaker transcriptions exist, check for direct transcription text
+    const directText = TranscriptionStore.getRawTranscription();
+    if (directText && directText.trim() !== "") {
+      return `<div class="transcript-entry">
+        <div class="transcript-text">${directText}</div>
+      </div>`;
+    }
+    return ""; // Return empty string if no transcription exists
+  }
+  
   // For each speaker, add their entries with speaker info
-  Object.keys(speakerTranscriptions).forEach(speakerId => {
+  Object.keys(TranscriptionStore.getSpeakerTranscriptions()).forEach(speakerId => {
     const speaker = speakersCache.find(s => s.id === speakerId);
     const speakerName = speaker ? speaker.name : "דובר";
     
-    speakerTranscriptions[speakerId].forEach(entry => {
+    TranscriptionStore.getSpeakerTranscriptions()[speakerId].forEach(entry => {
       allEntries.push({
         speakerId,
         speakerName,
@@ -278,6 +343,11 @@ function processAllTranscriptions() {
       });
     });
   });
+  
+  // If no entries, return empty string
+  if (allEntries.length === 0) {
+    return "";
+  }
   
   // Sort by timestamp
   allEntries.sort((a, b) => a.timestamp - b.timestamp);
@@ -562,6 +632,44 @@ function resetFontSize() {
   fontSizeIncreaseBtn.addEventListener('click', increaseFontSize);
 }
 
+// Submit question from audience member
+function submitQuestion() {
+  if (!questionInput) return;
+  
+  const questionText = questionInput.value.trim();
+  if (!questionText) {
+    alert("אנא הזן שאלה לפני השליחה");
+    return;
+  }
+  
+  // Get current speaker ID if available
+  const currentSpeakerId = localStorage.getItem("currentSpeakerId");
+  
+  // Create question object
+  const question = {
+    id: `q-${Date.now()}`,
+    text: questionText,
+    timestamp: new Date().toISOString(),
+    speakerId: currentSpeakerId || null,
+    answered: false
+  };
+  
+  // Get existing questions or create empty array
+  const existingQuestions = JSON.parse(localStorage.getItem("conferenceQuestions") || "[]");
+  
+  // Add new question
+  existingQuestions.push(question);
+  
+  // Save back to localStorage
+  localStorage.setItem("conferenceQuestions", JSON.stringify(existingQuestions));
+  
+  // Clear input
+  questionInput.value = "";
+  
+  // Show confirmation
+  alert("שאלתך נשלחה בהצלחה ותועבר למנחים");
+}
+
 // Check for stored preferences
 function loadUserPreferences() {
   // High contrast preference
@@ -589,9 +697,11 @@ function initializeApp() {
     return;
   }
   
+  // Initialize the TranscriptionStore first
+  TranscriptionStore.loadSpeakerTranscriptions();
+  
   initializeEventListeners();
   loadSpeakerData();
-  loadSpeakerTranscriptions();
   startSyncIntervals();
   setConferenceDetails();
   loadUserPreferences();
@@ -600,6 +710,7 @@ function initializeApp() {
   // Initial syncs
   syncRecordingStatus();
   syncSpeakerInfo();
+  syncTranscription(); // Do an initial sync of transcription
   syncSummary();
   
   console.log("Audience view initialized");
